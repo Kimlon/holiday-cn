@@ -1,0 +1,49 @@
+name: 🔄 Weekly Sync to Gitee
+
+on:
+  # 每周一 UTC 3:00 自动运行（北京时间 周一 11:00）
+  schedule:
+    - cron: '0 3 * * 1'   # cron 表达式：分 时 日 月 周（UTC）
+
+  # 允许手动触发（方便测试）
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛎️ Checkout your fork (with full history)
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0  # 获取完整历史（含所有分支、tags）
+
+      - name: 🔁 Fetch updates from upstream (original repo)
+        run: |
+          # 添加原始仓库为 upstream（只读，无需 token）
+          git remote add upstream https://github.com/NateScarlet/holiday-cn.git
+          git fetch upstream
+
+          # 合并最新 main / master 分支（根据原项目默认分支名调整！）
+          git checkout main || git checkout master
+          git merge upstream/main || git merge upstream/master
+
+          # 可选：同步所有分支（较复杂，一般只需同步默认分支即可）
+          # git push origin --all    # 推送所有本地分支到你的 fork
+
+      - name: 🚀 Push to Gitee
+        env:
+          GITEE_USERNAME: ${{ secrets.GITEE_USERNAME }}
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+          GITEE_REPO: your-gitee-name/project   # ← 替换！如：zhangsan/mylib
+        run: |
+          git config --global user.name "SyncBot"
+          git config --global user.email "syncbot@example.com"
+
+          # 添加 Gitee 远程仓库（HTTPS + Token 认证）
+          git remote add gitee "https://${GITEE_USERNAME}:${GITEE_TOKEN}@gitee.com/${GITEE_REPO}.git" 2>/dev/null || true
+
+          # 强制推送：确保 Gitee 完全同步（覆盖式同步）
+          git push --force gitee HEAD:main   # 或 HEAD:master，取决于默认分支名
+          # 若需同步所有分支和标签（谨慎！可能覆盖 Gitee 上的自定义分支）：
+          # git push --force --mirror gitee
