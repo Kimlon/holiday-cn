@@ -35,7 +35,7 @@ jobs:
         env:
           GITEE_USERNAME: ${{ secrets.GITEE_USERNAME }}
           GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
-          GITEE_REPO: https://gitee.com/applic/holiday-cn.git   # ← 替换！如：zhangsan/mylib
+          GITEE_REPO: applic/holiday-cn   # ← 替换！如：zhangsan/mylib
         run: |
           git config --global user.name "SyncBot"
           git config --global user.email "syncbot@example.com"
